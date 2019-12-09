@@ -40,7 +40,7 @@ rookSprite = do ->
     rookSprite = PIXI.Sprite.from 'assets/black_rook.png'
     rookSprite.anchor.x = 0
     rookSprite.anchor.y = 0
-    hex = grid.get(24)
+    hex = grid.get(34)
     tempHeight = hex.width()
     rookSprite.width /= rookSprite.height / tempHeight
     rookSprite.height = tempHeight
@@ -104,7 +104,21 @@ leftDowns = for i in [0...width]
         hex = grid.get({x, y})
     diag
 
+rightDowns = for i in [0..width]
+    {x, y} = hex = grid.get(i)
+    # a single diagonal line of hexes
+    diag = []
+    while hex?
+        diag.push hex
+        x++
+        y++
+        hex = grid.get {x, y}
+        diag.push hex
+        y++
+        hex = grid.get {x, y}
+    diag
 
+console.log rightDowns
 highlightStraight = (hex) ->
     {x, y} = hex
     # y coordinate of topmost hex
@@ -113,11 +127,14 @@ highlightStraight = (hex) ->
     # x coordinate of bottomost hex
     # or y coordinate of rightmost hex
     b = 9
-    
+   
+    {q, s} = Hex().cartesianToCube hex
     # go down and to left
-    console.log x + y
+    console.log s
     console.log x, y
-    for hex in leftDowns[x + y - 1]
+    for hex in leftDowns[Math.abs(s)]
+        yellowHighlight.highlight hex
+    for hex in rightDowns[q]
         yellowHighlight.highlight hex
     for i in [a..b]
         lightCartesian(i, y)
