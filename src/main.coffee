@@ -118,34 +118,75 @@ rightDowns = for i in [0..width]
         hex = grid.get {x, y}
     diag
 
-console.log rightDowns
-highlightStraight = (hex) ->
+# get the hexes that a straight moving
+# (i.e. bishop, rook, queen)
+# piece can reach
+straightRange = (hex) ->
+    ret = []
     {x, y} = hex
-    # y coordinate of topmost hex
-    # or x coordinate of leftmost hex
-    a = -1
-    # x coordinate of bottomost hex
-    # or y coordinate of rightmost hex
-    b = 9
-   
     {q, s} = Hex().cartesianToCube hex
-    # go down and to left
-    console.log s
-    console.log x, y
-    for hex in leftDowns[Math.abs(s)]
+    leftDown = leftDowns[Math.abs s]
+    for i in [leftDown.indexOf(hex)+1...leftDown.length]
+        hex = leftDown[i]
+        if hex.piece
+            break
+        ret.push hex
+    for i in [0..leftDown.indexOf(hex)]
+        hex = leftDown[i]
+        if hex.piece
+            break
+        ret.push hex
+    rightDown = rightDowns[q]
+    for i in [rightDown.indexOf(hex)+1...rightDown.length]
+        hex = rightDown[i]
+        if hex.piece
+            break
+        ret.push hex
+    for i in [0..rightDown.indexOf(hex)]
+        hex = rightDown[i]
+        if hex.piece
+            break
+        ret.push hex
+    for i in [x+1..9]
+        hex = grid.get {x: i, y}
+        if hex.piece
+            break
+        ret.push hex
+    for i in [x-1..0]
+        hex = grid.get {x: i, y}
+        if hex.piece
+            break
+        ret.push hex
+    ret
+
+highlightStraight = (hex) ->
+    for hex in straightRange hex
         yellowHighlight.highlight hex
-    for hex in rightDowns[q]
-        yellowHighlight.highlight hex
-    for i in [a..b]
-        lightCartesian(i, y)
+    #{x, y} = hex
+    ## y coordinate of topmost hex
+    ## or x coordinate of leftmost hex
+    #a = -1
+    ## x coordinate of bottomost hex
+    ## or y coordinate of rightmost hex
+    #b = 9
+   
+    #{q, s} = Hex().cartesianToCube hex
+    ## go down and to left
+    #console.log s
+    #console.log x, y
+    #for hex in leftDowns[Math.abs(s)]
+    #    yellowHighlight.highlight hex
+    #for hex in rightDowns[q]
+    #    yellowHighlight.highlight hex
+    #for i in [a..b]
+    #    lightCartesian(i, y)
         
     
 select = (hex) ->
     if hex?.piece
+        highlightStraight hex
         blueHighlight.unlight()
         blueHighlight.highlight hex
-        #highlightRange hex
-        highlightStraight hex
 
 document.addEventListener 'mousedown', (offsets) ->
     mousedown = true
