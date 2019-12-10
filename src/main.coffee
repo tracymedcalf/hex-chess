@@ -1,215 +1,116 @@
 import * as PIXI from 'pixi.js'
 import * as Honeycomb from 'honeycomb-grid'
-#import * as ECS from '@fritzy/ecs'
+
+# add globals to window.
+
+# width and height in hexes
+window.width = 10
+window.height = 10
+window.Hex = Honeycomb.extendHex({
+    size: 40
+    offset: 1
+})
+window.Grid = Honeycomb.defineGrid(Hex)
+window.grid = Grid.rectangle {width, height}
 
 app = new PIXI.Application({ transparent: true, antialias: true })
 document.body.appendChild(app.view)
 
-# width and height in hexes
-width = 10
-height = 10
+setup = ->
+    sheet = PIXI.Loader.shared.resources['assets/spritesheet.json'].spritesheet
+    sprite = new PIXI.Sprite sheet.textures['image_part_001.png']
+    sprite.anchor.x = 0
+    sprite.anchor.y = 0
+    sprite.position.x = 0
+    sprite.position.y = 0
+    app.stage.addChild sprite
 
-Hex = Honeycomb.extendHex({
-    size: 40
-    offset: 1
-})
-Grid = Honeycomb.defineGrid(Hex)
-grid = Grid.rectangle {width, height}
+PIXI.Loader.shared.add('assets/spritesheet.json').load(setup)
 
-drawHex = (hex, graphics) ->
-    point = hex.toPoint()
-    corners = hex.corners().map (corner) -> corner.add point
-    [firstCorner, otherCorners...] = corners
-    graphics.moveTo firstCorner.x, firstCorner.y
-    for { x, y } in otherCorners
-        graphics.lineTo x, y
-    graphics.lineTo firstCorner.x, firstCorner.y
-
-draw = ->
-    graphics = new PIXI.Graphics()
-    graphics.lineStyle(1, 0x999999)
-    count = 0
-    for hex in grid
-        drawHex hex, graphics
-    app.stage.addChild graphics
-
-draw()
-
-# assets are in /dist
-rookSprite = do ->
-    rookSprite = PIXI.Sprite.from 'assets/black_rook.png'
-    rookSprite.anchor.x = 0
-    rookSprite.anchor.y = 0
-    hex = grid.get(34)
-    tempHeight = hex.width()
-    rookSprite.width /= rookSprite.height / tempHeight
-    rookSprite.height = tempHeight
-    point = hex.toPoint()
-    rookSprite.position.x = point.x
-    rookSprite.position.y = point.y
-    app.stage.addChild rookSprite
-    hex.piece = rookSprite
-    rookSprite
-
-class H
-    constructor : (@color) ->
-        @line = new PIXI.Graphics()
-        @line.lineStyle 4, @color
-    highlight : (hex) ->
-        drawHex hex, @line
-        app.stage.addChild @line
-    unlight : ->
-        @line.clear()
-        @setup()
-    setup : ->
-        @line.lineStyle 4, @color
-
-blueHighlight = new H 0x0000ff
-yellowHighlight = new H 0xffff00
-
-getHexCoordinates = (offsets) ->
-    {offsetX, offsetY} = offsets
-    Grid.pointToHex(offsetX, offsetY)
-
-clickCoordinates = {}
-mousedown = false
-highlightRange = (hex) ->
-    for hex in grid.hexesInRange hex, 3, false
-        yellowHighlight.highlight hex
-
-# highlight the hex specified by
-# cube coordinates
-#lightCube = (q, r, s) ->
-#    yellowHighlight.highlight(
-#        grid.get Hex().cubeToCartesian {q, r, s})
-
-lightCartesian = (x, y) ->
-    hex = grid.get {x, y}
-    if hex?
-        yellowHighlight.highlight(hex)
-
-# create a list of lists
-# each sublist is a diagonal going left and down
-leftDowns = for i in [0...width]
-    {x, y} = hex = grid.get(i)
-    # a single diagonal line of hexes
-    diag = []
-    while hex?
-        diag.push hex
-        y++
-        hex = grid.get({x, y})
-        diag.push hex
-        x--
-        y++
-        hex = grid.get({x, y})
-    diag
-
-rightDowns = for i in [0..width]
-    {x, y} = hex = grid.get(i)
-    # a single diagonal line of hexes
-    diag = []
-    while hex?
-        diag.push hex
-        x++
-        y++
-        hex = grid.get {x, y}
-        diag.push hex
-        y++
-        hex = grid.get {x, y}
-    diag
-
-# get the hexes that a straight moving
-# (i.e. bishop, rook, queen)
-# piece can reach
-straightRange = (hex) ->
-    ret = []
-    {x, y} = hex
-    {q, s} = Hex().cartesianToCube hex
-    leftDown = leftDowns[Math.abs s]
-    for i in [leftDown.indexOf(hex)+1...leftDown.length]
-        hex = leftDown[i]
-        if hex.piece
-            break
-        ret.push hex
-    for i in [0..leftDown.indexOf(hex)]
-        hex = leftDown[i]
-        if hex.piece
-            break
-        ret.push hex
-    rightDown = rightDowns[q]
-    for i in [rightDown.indexOf(hex)+1...rightDown.length]
-        hex = rightDown[i]
-        if hex.piece
-            break
-        ret.push hex
-    for i in [0..rightDown.indexOf(hex)]
-        hex = rightDown[i]
-        if hex.piece
-            break
-        ret.push hex
-    for i in [x+1..9]
-        hex = grid.get {x: i, y}
-        if hex.piece
-            break
-        ret.push hex
-    for i in [x-1..0]
-        hex = grid.get {x: i, y}
-        if hex.piece
-            break
-        ret.push hex
-    ret
-
-highlightStraight = (hex) ->
-    for hex in straightRange hex
-        yellowHighlight.highlight hex
-    #{x, y} = hex
-    ## y coordinate of topmost hex
-    ## or x coordinate of leftmost hex
-    #a = -1
-    ## x coordinate of bottomost hex
-    ## or y coordinate of rightmost hex
-    #b = 9
-   
-    #{q, s} = Hex().cartesianToCube hex
-    ## go down and to left
-    #console.log s
-    #console.log x, y
-    #for hex in leftDowns[Math.abs(s)]
-    #    yellowHighlight.highlight hex
-    #for hex in rightDowns[q]
-    #    yellowHighlight.highlight hex
-    #for i in [a..b]
-    #    lightCartesian(i, y)
-        
-    
-select = (hex) ->
-    if hex?.piece
-        highlightStraight hex
-        blueHighlight.unlight()
-        blueHighlight.highlight hex
-
-document.addEventListener 'mousedown', (offsets) ->
-    mousedown = true
-    clickCoordinates = getHexCoordinates offsets
-    #console.log Hex().cartesianToCube clickCoordinates
-    #blueHighlight.highlight clickCoordinates
-    select grid.get(clickCoordinates)
-
-#document.addEventListener 'mousemove', (event) ->
-#    if mousedown
-#        {x, y} = destCoordinates = getHexCoordinates event
-#        # check if player dragged between hexes
-#        if x != clickCoordinates.x or y != clickCoordinates.y
-#            console.log 'dragging'
-#            blueHighlight.highlight destCoordinates
-#            # source cube coordinates
-#            sC = Hex().cartesianToCube(x, y)
-#            # destination cube coordinates
-#            dC = Hex().cartesianToCube(clickCoordinates)
-#            if sC.q == dC.q or sC.r == dC.r or sC.s == dC.s
-#                console.log 'straight line drag'
+#drawHex = (hex, graphics) ->
+#    point = hex.toPoint()
+#    corners = hex.corners().map (corner) -> corner.add point
+#    [firstCorner, otherCorners...] = corners
+#    graphics.moveTo firstCorner.x, firstCorner.y
+#    for { x, y } in otherCorners
+#        graphics.lineTo x, y
+#    graphics.lineTo firstCorner.x, firstCorner.y
 #
-#document.addEventListener 'mouseup', (event) ->
-#    mousedown = false
-#    console.log 'mouseup'
-#    #blueHighlight.unlight()
+#draw = ->
+#    graphics = new PIXI.Graphics()
+#    graphics.lineStyle(1, 0x999999)
+#    count = 0
+#    for hex in grid
+#        drawHex hex, graphics
+#    app.stage.addChild graphics
+#
+#draw()
+#
+#
+#class H
+#    constructor : (@color) ->
+#        @line = new PIXI.Graphics()
+#        @line.lineStyle 4, @color
+#    highlight : (hex) ->
+#        drawHex hex, @line
+#        app.stage.addChild @line
+#    unlight : ->
+#        @line.clear()
+#        @setup()
+#    setup : ->
+#        @line.lineStyle 4, @color
+#
+#blueHighlight = new H 0x0000ff
+#yellowHighlight = new H 0xffff00
+#
+#getHexCoordinates = (offsets) ->
+#    {offsetX, offsetY} = offsets
+#    Grid.pointToHex(offsetX, offsetY)
+#
+#clickCoordinates = {}
+#mousedown = false
+#
+## highlight the hex specified by
+## cube coordinates
+##lightCube = (q, r, s) ->
+##    yellowHighlight.highlight(
+##        grid.get Hex().cubeToCartesian {q, r, s})
+#
+#lightCartesian = (x, y) ->
+#    hex = grid.get {x, y}
+#    if hex?
+#        yellowHighlight.highlight(hex)
+#
+#highlightStraight = (hex) ->
+#    for hex in straightRange hex
+#        yellowHighlight.highlight hex
+#
+#select = (hex) ->
+#    if hex?.piece
+#        highlightStraight hex
+#        blueHighlight.unlight()
+#        blueHighlight.highlight hex
+#
+#document.addEventListener 'mousedown', (offsets) ->
+#    mousedown = true
+#    clickCoordinates = getHexCoordinates offsets
+#    select grid.get(clickCoordinates)
+#
+##document.addEventListener 'mousemove', (event) ->
+##    if mousedown
+##        {x, y} = destCoordinates = getHexCoordinates event
+##        # check if player dragged between hexes
+##        if x != clickCoordinates.x or y != clickCoordinates.y
+##            console.log 'dragging'
+##            blueHighlight.highlight destCoordinates
+##            # source cube coordinates
+##            sC = Hex().cartesianToCube(x, y)
+##            # destination cube coordinates
+##            dC = Hex().cartesianToCube(clickCoordinates)
+##            if sC.q == dC.q or sC.r == dC.r or sC.s == dC.s
+##                console.log 'straight line drag'
+##
+##document.addEventListener 'mouseup', (event) ->
+##    mousedown = false
+##    console.log 'mouseup'
+##    #blueHighlight.unlight()
