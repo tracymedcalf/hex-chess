@@ -1,6 +1,8 @@
 import * as PIXI from 'pixi.js'
 import * as Honeycomb from 'honeycomb-grid'
+import { Sprite } from './sprites.coffee'
 
+config = require './config.json'
 # add globals to window.
 
 # width and height in hexes
@@ -13,56 +15,56 @@ window.Hex = Honeycomb.extendHex({
 window.Grid = Honeycomb.defineGrid(Hex)
 window.grid = Grid.rectangle {width, height}
 
+newNode = (className, type = 'DIV') =>
+    (ret = document.createElement type).className +=
+        className
+    ret
+
+
+    
 app = new PIXI.Application({ transparent: true, antialias: true })
-document.body.appendChild(app.view)
+textLayer = do ->
+    view = app.view
+    document.body.appendChild container = newNode 'container'
+    container.appendChild view
+
+    # create the text layer
+    container.appendChild textLayer = newNode 'text-layer'
+    textLayer
+
+addText = (text, {x, y}) =>
+    textLayer.appendChild cont = newNode 'floating-div'
+    cont.style.left = x + 'px'
+    cont.style.top = y + 'px'
+    cont.appendChild document.createTextNode text
+    cont
+
+drawHex = (hex, graphics) ->
+    point = hex.toPoint()
+    corners = hex.corners().map (corner) -> corner.add point
+    [firstCorner, otherCorners...] = corners
+    graphics.moveTo firstCorner.x, firstCorner.y
+    for { x, y } in otherCorners
+        graphics.lineTo x, y
+    graphics.lineTo firstCorner.x, firstCorner.y
+
+draw = ->
+    graphics = new PIXI.Graphics()
+    graphics.lineStyle(1, 0x999999)
+    count = 0
+    for hex in grid
+        drawHex hex, graphics
+    app.stage.addChild graphics
+
+draw()
 
 setup = ->
     sheet = PIXI.Loader.shared.resources['assets/spritesheet.json'].spritesheet
     sprite = new PIXI.Sprite sheet.textures['image_part_001.png']
-    sprite.anchor.x = 0
-    sprite.anchor.y = 0
-    sprite.position.x = 0
-    sprite.position.y = 0
     app.stage.addChild sprite
 
 PIXI.Loader.shared.add('assets/spritesheet.json').load(setup)
 
-#drawHex = (hex, graphics) ->
-#    point = hex.toPoint()
-#    corners = hex.corners().map (corner) -> corner.add point
-#    [firstCorner, otherCorners...] = corners
-#    graphics.moveTo firstCorner.x, firstCorner.y
-#    for { x, y } in otherCorners
-#        graphics.lineTo x, y
-#    graphics.lineTo firstCorner.x, firstCorner.y
-#
-#draw = ->
-#    graphics = new PIXI.Graphics()
-#    graphics.lineStyle(1, 0x999999)
-#    count = 0
-#    for hex in grid
-#        drawHex hex, graphics
-#    app.stage.addChild graphics
-#
-#draw()
-#
-#
-#class H
-#    constructor : (@color) ->
-#        @line = new PIXI.Graphics()
-#        @line.lineStyle 4, @color
-#    highlight : (hex) ->
-#        drawHex hex, @line
-#        app.stage.addChild @line
-#    unlight : ->
-#        @line.clear()
-#        @setup()
-#    setup : ->
-#        @line.lineStyle 4, @color
-#
-#blueHighlight = new H 0x0000ff
-#yellowHighlight = new H 0xffff00
-#
 #getHexCoordinates = (offsets) ->
 #    {offsetX, offsetY} = offsets
 #    Grid.pointToHex(offsetX, offsetY)
@@ -114,3 +116,26 @@ PIXI.Loader.shared.add('assets/spritesheet.json').load(setup)
 ##    mousedown = false
 ##    console.log 'mouseup'
 ##    #blueHighlight.unlight()
+
+coordinatesNodes = []
+
+removeCoordinates = ->
+    for node in coordinatesNodes
+        node.remove()
+
+displayCoordinates = (f) ->
+    removeCoordinates()
+    coordinatesNodes = for hex in grid
+        addText (f hex), hex.toPoint()
+
+radioHandler = ({target}) ->
+    switch target.value
+        when 'cartesian' then displayCoordinates ({x, y}) ->
+            "(#{x}, #{y})"
+        when 'cube' then displayCoordinates (hex) ->
+            {q, r, s} = Hex().cartesianToCube hex
+            "(#{q},#{r},#{s})"
+        when 'off' then removeCoordinates()
+for button in document.getElementsByTagName 'input'
+    console.log 'adding event'
+    button.addEventListener 'change', radioHandler

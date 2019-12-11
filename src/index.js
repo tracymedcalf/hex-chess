@@ -1,4 +1,5 @@
 import main from './main.coffee';
+import './style.css';
 //import * as Honeycomb from 'honeycomb-grid';
 //
 //const Hex = Honeycomb.extendHex({ size: 50 })

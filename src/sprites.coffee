@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 # assets are in /dist
-export Sprite = (hex, picName) ->
-    sprite = PIXI.Sprite.from "assets/#{picName}.png"
+export Sprite = (sheet, hex, picName) ->
+    sprite = new PIXI.Sprite sheet.textures['image_part_001.png']
     sprite.anchor.x = 0
     sprite.anchor.y = 0
     tempHeight = hex.width()

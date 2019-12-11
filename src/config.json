@@ -1,0 +1,11 @@
+{
+  "name": "webpack-demo",
+  "description": "",
+  "pieces": [
+    {
+      "position": [1,0],
+      "sprite": "image_part_001"
+    }
+  ]
+
+}
