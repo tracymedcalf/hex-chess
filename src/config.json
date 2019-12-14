@@ -1,10 +1,17 @@
 {
-  "name": "webpack-demo",
+  "name": "level-config",
   "description": "",
+  "mapShape": "hexagon",
   "pieces": [
     {
-      "position": [1,0],
-      "sprite": "image_part_001"
+      "className": "bishop",
+      "position": [2,3],
+      "image": "image_part_001"
+    },
+    {
+      "className": "bishop",
+      "position": [2,4],
+      "image": "image_part_001"
     }
   ]
 
