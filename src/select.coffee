@@ -22,10 +22,12 @@ getHexCoordinates = ({offsetX, offsetY}) ->
 
 export mousedownGrid = (offset) ->
     clickedHex = getHexCoordinates offset
+    console.log globals.grid.get clickedHex
 
 export mouseupGrid = (event) ->
     # so we know whether user dragged over hex
     mouseupHex = getHexCoordinates event
     if mouseupHex.x == clickedHex.x and mouseupHex.y == clickedHex.y
         select mouseupHex
-    
+    else # player is trying to move hex
+        console.log 'moving hex' # (grid.get clickedHex)

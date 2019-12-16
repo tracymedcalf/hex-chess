@@ -12,23 +12,36 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     module: {
-     rules: [
-       {
-         test: /\.coffee$/,
+        rules: [
+            {
+                test: /\.(js|jsx|coffee)$/,
+                exclude: /(node_modules|bower_components)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            '@babel/preset-env',
+                            "@babel/preset-react"
+                        ]
+                    }
+                }
+            },
+            {
+                test: /\.coffee$/,
 
-         use: [
-             'coffee-loader',
-         ],
-       },
-       {
-         test: /\.css$/,
+                use: [
+                    'coffee-loader',
+                ],
+            },
+            {
+                test: /\.css$/,
 
-         use: [
-           'style-loader',
-           'css-loader',
-         ],
-       },
-     ],
+                use: [
+                    'style-loader',
+                    'css-loader',
+                ],
+            },
+        ],
     },
     resolve: {
         extensions: ['.js', '.coffee']

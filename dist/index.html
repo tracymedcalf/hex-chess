@@ -7,11 +7,20 @@
     </head>
 
     <body>
-        <div>
+        <div id='radio-container'>
+            <!--
             <input type="radio" name="display-coordinates" value="off"> Off<br>
             <input type="radio" name="display-coordinates" value="cartesian"> Cartesian<br>
             <input type="radio" name="display-coordinates" value="cube"> Cube<br>
+            -->
         </div>
+
+        <!-- Load React. -->
+        <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+
+        <!-- my bundled code -->
         <script type="text/javascript" src="bundle.js"></script>
     </body>
 </html>

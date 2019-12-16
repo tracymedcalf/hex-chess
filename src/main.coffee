@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js'
-
 config = require './config.json'
 
 # add globals to window.
@@ -12,27 +11,15 @@ import { Sprite } from './sprites.coffee'
 import * as select from './select.coffee'
 import * as movements from './movements.coffee'
 import { drawHex } from './drawUtils.coffee'
+import { newNode, addText } from './utils.coffee'
+import { RadioButtons } from './RadioButtons.coffee'
 
-newNode = (className, type = 'DIV') =>
-    (ret = document.createElement type).className +=
-        className
-    ret
-
-textLayer = do ->
-    view = globals.app.view
-    document.body.appendChild container = newNode 'container'
-    container.appendChild view
-
-    # create the text layer
-    container.appendChild textLayer = newNode 'text-layer'
-    textLayer
-
-addText = (text, {x, y}) =>
-    textLayer.appendChild cont = newNode 'floating-div'
-    cont.style.left = x + 'px'
-    cont.style.top = y + 'px'
-    cont.appendChild document.createTextNode text
-    cont
+# Later add event listeners to container.
+# Holds what we draw, including the grid.
+document.body.appendChild container = newNode 'container'
+container.appendChild globals.app.view
+# create the text layer
+container.appendChild textLayer = newNode 'text-layer'
 
 draw = ->
     graphics = new PIXI.Graphics()
@@ -62,10 +49,17 @@ setup = ->
 
 PIXI.Loader.shared.add('assets/spritesheet.json').load(setup)
 
-document.addEventListener 'mousedown', (offsets) ->
+mousedown = false
+
+container.addEventListener 'mousedown', (offsets) ->
+    mousedown = true
     select.mousedownGrid offsets
 
-document.addEventListener 'mouseup', (event) ->
+container.addEventListener 'mousemove', (event) ->
+
+    
+container.addEventListener 'mouseup', (event) ->
+    mousedown = false
     select.mouseupGrid event
 
 coordinatesNodes = []
@@ -87,5 +81,9 @@ radioHandler = ({target}) ->
             {q, r, s} = globals.Hex().cartesianToCube hex
             "(#{q},#{r},#{s})"
         when 'off' then removeCoordinates()
-for button in document.getElementsByTagName 'input'
-    button.addEventListener 'change', radioHandler
+#for button in document.getElementsByTagName 'input'
+#    button.addEventListener 'change', radioHandler
+#
+ReactDOM.render (React.createElement RadioButtons),
+    (document.getElementById 'radio-container')
+

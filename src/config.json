@@ -1,7 +1,7 @@
 {
   "name": "level-config",
   "description": "",
-  "mapShape": "hexagon",
+  "mapShape": "rectangle",
   "pieces": [
     {
       "className": "bishop",
